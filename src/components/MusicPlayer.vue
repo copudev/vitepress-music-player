@@ -10,7 +10,6 @@ html.dark .music-player {
     0 8px 20px rgba(0, 0, 0, 0.2),
     inset <template>
   <div class="music-player" :class="{ 'expanded': isExpanded }" v-show="true">
-    <!-- 迷你播放器 - 确保显示条件正确 -->
     <div class="mini-player" @click="toggleExpanded" v-if="!isExpanded && playlist.length > 0">
       <div class="mini-info">
         <img :src="currentTrack.cover" :alt="currentTrack.title" class="mini-cover">
@@ -36,9 +35,7 @@ html.dark .music-player {
       </div>
     </div>
 
-    <!-- 完整播放器 -->
     <div class="full-player" v-if="isExpanded">
-      <!-- 头部控制栏 -->
       <div class="player-header">
         <h3>音乐播放器</h3>
         <button @click="toggleExpanded" class="close-btn">
@@ -48,7 +45,6 @@ html.dark .music-player {
         </button>
       </div>
 
-      <!-- 当前播放信息 -->
       <div class="current-track" v-if="currentTrack">
         <img :src="currentTrack.cover" :alt="currentTrack.title" class="track-cover">
         <div class="track-info">
@@ -58,7 +54,6 @@ html.dark .music-player {
         </div>
       </div>
 
-      <!-- 播放控制 -->
       <div class="player-controls">
         <div class="control-buttons">
           <button @click="playPrevious" class="control-btn">
@@ -81,7 +76,6 @@ html.dark .music-player {
           </button>
         </div>
 
-        <!-- 进度条 -->
         <div class="progress-container">
           <span class="time">{{ formatTime(currentTime) }}</span>
           <div class="progress-bar" @click="seekTo" ref="progressBar">
@@ -91,7 +85,6 @@ html.dark .music-player {
           <span class="time">{{ formatTime(duration) }}</span>
         </div>
 
-        <!-- 音量控制 -->
         <div class="volume-container">
           <button @click="toggleMute" class="volume-btn">
             <svg v-if="volume === 0" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -111,7 +104,6 @@ html.dark .music-player {
         </div>
       </div>
 
-      <!-- 播放列表 -->
       <div class="playlist">
         <h4>播放列表</h4>
         <div class="track-list">
@@ -132,7 +124,6 @@ html.dark .music-player {
       </div>
     </div>
 
-    <!-- 音频元素 -->
     <audio 
       ref="audio" 
       @timeupdate="updateTime" 
@@ -150,38 +141,32 @@ import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { playlist, getBestAudioFormat } from '../utils/musicData'
 import type { Track, AudioFormat } from '../types'
 
-
-// 响应式数据
 const isExpanded = ref(false)
 const isPlaying = ref(false)
 const currentTrackIndex = ref(0)
 const currentTime = ref(0)
 const duration = ref(0)
 const volume = ref(0.7)
-const previousVolume = ref(0.7) // 新增：记住静音前的音量
+const previousVolume = ref(0.7)
 const audio = ref<HTMLAudioElement>()
 const progressBar = ref<HTMLElement>()
 const volumeBar = ref<HTMLElement>()
 
-// 计算属性
 const currentTrack = computed(() => playlist[currentTrackIndex.value])
 const progressPercent = computed(() => {
   if (duration.value === 0) return 0
   return (currentTime.value / duration.value) * 100
 })
 
-// 方法
 const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
 }
 
 const togglePlay = async () => {
   if (!audio.value) return
-  
-  // 强制重置播放速度
+
   audio.value.playbackRate = 1.0
-  
-  // 确保音量设置正确
+
   audio.value.volume = volume.value
   
   if (isPlaying.value) {
@@ -201,25 +186,20 @@ const playTrack = async (index: number) => {
   
   currentTrackIndex.value = index
   const track = currentTrack.value
-  
-  // 重置音频元素和UI状态
+
   audio.value.pause()
   audio.value.currentTime = 0
   currentTime.value = 0
   duration.value = 0
   isPlaying.value = false
-  
-  // 获取最佳音频格式
+
   const audioUrl = getBestAudioFormat(track)
-  
-  // 设置新的音频源
+
   audio.value.src = audioUrl
-  
-  // 强制设置播放速度为正常
+
   audio.value.playbackRate = 1.0
   audio.value.preservesPitch = false
-  
-  // 等待音频加载
+
   try {
     audio.value.load()
     await new Promise((resolve, reject) => {
@@ -247,8 +227,7 @@ const playTrack = async (index: number) => {
       audio.value?.addEventListener('canplay', onCanPlay)
       audio.value?.addEventListener('error', onError)
     })
-    
-    // 开始播放前最后一次检查播放速度
+
     audio.value.playbackRate = 1.0
     await audio.value.play()
     isPlaying.value = true
@@ -275,8 +254,7 @@ const playPrevious = () => {
 const updateTime = () => {
   if (audio.value) {
     currentTime.value = audio.value.currentTime
-    
-    // 监控播放速度，如果被意外改变就重置
+
     if (Math.abs(audio.value.playbackRate - 1.0) > 0.01) {
       audio.value.playbackRate = 1.0
     }
@@ -286,7 +264,6 @@ const updateTime = () => {
 const loadedMetadata = () => {
   if (audio.value) {
     duration.value = audio.value.duration
-    // 确保播放速度为正常速度
     audio.value.playbackRate = 1.0
   }
 }
@@ -308,15 +285,13 @@ const handleAudioError = async (event: Event) => {
     
     const errorMessage = errorMessages[errorCode] || '未知错误'
     console.error(`错误代码 ${errorCode}: ${errorMessage}`)
-    
-    // 如果是解码错误或格式不支持，尝试使用备用格式
+
     if (errorCode === 3 || errorCode === 4) {
       await tryFallbackFormat(currentTrack)
       return
     }
   }
-  
-  // 其他错误，尝试重新加载
+
   setTimeout(() => {
     if (audio.value) {
       audio.value.load()
@@ -326,11 +301,7 @@ const handleAudioError = async (event: Event) => {
 
 const tryFallbackFormat = async (track: Track) => {
   if (!track.formats) return
-  
-  // 获取当前正在使用的URL
   const currentUrl = audio.value?.src
-  
-  // 定义可用的格式类型
   const formatOptions: AudioFormat[] = ['mp3', 'wav', 'ogg']
   
   for (const format of formatOptions) {
@@ -340,8 +311,7 @@ const tryFallbackFormat = async (track: Track) => {
         if (audio.value) {
           audio.value.src = url
           audio.value.load()
-          
-          // 等待加载完成
+
           await new Promise<void>((resolve, reject) => {
             const timeout = setTimeout(() => {
               reject(new Error('加载超时'))
@@ -395,8 +365,7 @@ const setVolume = (event: MouseEvent) => {
   
   volume.value = percent
   audio.value.volume = percent
-  
-  // 如果设置了非零音量，更新previousVolume
+
   if (percent > 0) {
     previousVolume.value = percent
   }
@@ -406,10 +375,8 @@ const toggleMute = () => {
   if (!audio.value) return
   
   if (volume.value === 0) {
-    // 取消静音：恢复到之前的音量
     volume.value = previousVolume.value
   } else {
-    // 静音：记住当前音量，然后设为0
     previousVolume.value = volume.value
     volume.value = 0
   }
@@ -425,26 +392,21 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-// 监听音量变化
 watch(volume, (newVolume) => {
   if (audio.value) {
     audio.value.volume = newVolume
   }
 })
 
-// 组件挂载
 onMounted(() => {
   if (audio.value) {
     audio.value.volume = volume.value
-    
-    // 获取最佳音频格式用于初始化
+
     const initialAudioUrl = getBestAudioFormat(currentTrack.value)
     audio.value.src = initialAudioUrl
     
-    // 确保播放速度正常
     audio.value.playbackRate = 1.0
     
-    // 添加音频调试信息
     audio.value.addEventListener('loadstart', () => {
       console.log('开始加载音频文件')
     })
@@ -452,7 +414,6 @@ onMounted(() => {
     audio.value.addEventListener('loadeddata', () => {
       console.log('音频数据加载完成')
       
-      // 安全检查webkitAudioDecodedByteCount
       try {
         const audioElement = audio.value as any
         const hasDecodeInfo = audioElement.webkitAudioDecodedByteCount !== undefined
@@ -507,7 +468,6 @@ onMounted(() => {
     0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
-/* 迷你播放器样式 */
 .mini-player {
   display: flex !important;
   align-items: center;
@@ -593,7 +553,6 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-/* 完整播放器样式 */
 .full-player {
   width: 420px;
   padding: 24px;
@@ -631,7 +590,6 @@ onMounted(() => {
   color: #1a1a1a;
 }
 
-/* 当前播放信息 */
 .current-track {
   display: flex;
   gap: 16px;
@@ -676,7 +634,6 @@ onMounted(() => {
   color: #999;
 }
 
-/* 播放控制 */
 .player-controls {
   margin-bottom: 24px;
   background: rgba(248, 250, 252, 0.5);
@@ -722,25 +679,24 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-/* 进度条 */
 .progress-container {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px; /* 减少间距 */
-  padding: 0; /* 移除内边距，已在父容器中处理 */
+  margin-bottom: 16px;
+  padding: 0;
 }
 
 .time {
   font-size: 12px;
   color: #666;
   min-width: 40px;
-  font-variant-numeric: tabular-nums; /* 使数字等宽 */
+  font-variant-numeric: tabular-nums;
 }
 
 .progress-bar {
   flex: 1;
-  height: 6px; /* 与音量条保持一致的高度 */
+  height: 6px;
   background: rgba(0, 0, 0, 0.08);
   border-radius: 3px;
   position: relative;
@@ -791,7 +747,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 0; /* 移除左右padding，消除空白区域 */
+  padding: 8px 0;
 }
 
 .volume-btn {
@@ -807,7 +763,7 @@ onMounted(() => {
   justify-content: center;
   min-width: 32px;
   height: 32px;
-  flex-shrink: 0; /* 防止按钮被压缩 */
+  flex-shrink: 0;
 }
 
 .volume-btn:hover {
@@ -816,14 +772,14 @@ onMounted(() => {
 }
 
 .volume-bar {
-  flex: 1; /* 占据剩余空间，消除右侧空白 */
+  flex: 1;
   height: 6px;
   background: rgba(0, 0, 0, 0.08);
   border-radius: 3px;
   position: relative;
   cursor: pointer;
-  min-width: 80px; /* 设置最小宽度确保可用性 */
-  max-width: 140px; /* 限制最大宽度 */
+  min-width: 80px;
+  max-width: 140px;
 }
 
 .volume-fill {
@@ -880,9 +836,8 @@ onMounted(() => {
 .track-list {
   max-height: 240px;
   overflow-y: auto;
-  padding: 4px 12px 4px 0; /* 增加右侧padding为滚动条留出空间 */
-  margin: -4px -12px -4px 0; /* 补偿padding保持布局 */
-  /* 优化滚动性能，避免Firefox警告 */
+  padding: 4px 12px 4px 0;
+  margin: -4px -12px -4px 0;
   will-change: auto;
   transform: translateZ(0);
   scroll-behavior: auto;
@@ -900,7 +855,6 @@ onMounted(() => {
   transition: all 0.2s ease;
   background: transparent;
   border: 1px solid transparent;
-  /* 优化滚动性能 */
   contain: layout style paint;
   will-change: auto;
 }
@@ -975,7 +929,7 @@ onMounted(() => {
   text-align: right;
 }
 
-/* 暗色主题适配 - 使用VitePress的暗色主题类 */
+/* 暗色主题适配 */
 .dark .music-player,
 html.dark .music-player {
   background: rgba(24, 24, 27, 0.95);
@@ -1129,7 +1083,7 @@ html.dark .track-duration {
   
   .track-list {
     max-height: 200px;
-    padding: 6px 10px 6px 0; /* 移动端调整间距 */
+    padding: 6px 10px 6px 0;
     margin: -6px -10px -6px 0;
   }
   
@@ -1167,7 +1121,6 @@ html.dark .track-duration {
   }
 }
 
-/* 滚动条样式 */
 .track-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -1176,7 +1129,6 @@ html.dark .track-duration {
   background: rgba(0, 0, 0, 0.04);
   border-radius: 3px;
   margin: 4px 0;
-  /* 为滚动条轨道添加一些内边距效果 */
   border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
@@ -1184,7 +1136,6 @@ html.dark .track-duration {
   background: rgba(0, 123, 255, 0.3);
   border-radius: 3px;
   transition: background 0.2s ease;
-  /* 添加细微的边框 */
   border: 1px solid rgba(0, 123, 255, 0.1);
 }
 
@@ -1193,7 +1144,6 @@ html.dark .track-duration {
   border-color: rgba(0, 123, 255, 0.2);
 }
 
-/* Firefox 滚动条样式 */
 .track-list {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 123, 255, 0.3) rgba(0, 0, 0, 0.04);
