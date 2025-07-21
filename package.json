@@ -1,0 +1,73 @@
+{
+  "name": "@copudev/vitepress-music-player",
+  "version": "1.0.0",
+  "description": "🎵 A modern, responsive music player component for VitePress with FLAC support",
+  "keywords": [
+    "vitepress",
+    "vue3",
+    "music-player",
+    "audio",
+    "flac",
+    "typescript",
+    "component"
+  ],
+  "main": "dist/index.umd.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc --emitDeclarationOnly --outDir dist",
+    "build:docs": "vitepress build docs",
+    "preview": "vite preview",
+    "serve:docs": "vitepress serve docs",
+    "test": "vitest",
+    "lint": "eslint src --ext ts,vue --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "vue": "^3.2.0",
+    "vitepress": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.2",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.17.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vitepress": "^1.0.0",
+    "vitest": "^0.34.0",
+    "vue": "^3.3.4",
+    "vue-tsc": "^1.8.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/copudev/vitepress-music-player.git"
+  },
+  "bugs": {
+    "url": "https://github.com/copudev/vitepress-music-player/issues"
+  },
+  "homepage": "https://copudev.github.io/vitepress-music-player",
+  "author": {
+    "name": "dIT8Zv",
+    "email": "3365591452@qq.com"
+  },
+  "license": "MIT"
+}
