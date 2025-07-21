@@ -1,6 +1,5 @@
-/* 暗色主题适配 - 使用VitePress的暗色主题类 */
 .dark .music-player,
-html.dark .music-player {/* 暗色主题适配 - 使用VitePress的暗色主题类 */
+html.dark .music-player {
 .dark .music-player,
 html.dark .music-player {
   background: rgba(15, 15, 15, 0.98);
